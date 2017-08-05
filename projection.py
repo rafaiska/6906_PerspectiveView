@@ -31,8 +31,8 @@ class TriDObject(object):
         for src, dsts in loadedjson['edges'].items():
             for dst in dsts:
                 if not self.addedge(src, dst):
-                    print 'ERRO: uma das arestas contem vertice(s) desconhecido(s)'
-                    print '\tAresta: (%s, %s)' % (src, dst)
+                    print('ERRO: uma das arestas contem vertice(s) desconhecido(s)')
+                    print('\tAresta: (%s, %s)' % (src, dst))
 
     def loadfromnumpymatrix(self, parenttridobject, numpymatrix):
         """Carrega o objeto 3D a partir de uma matriz de pontos e um objeto 3D de referencia. Eh necessario passar um
@@ -101,9 +101,30 @@ class PerspectiveProjection(object):
         self.tridiobject = None
         self.projection = None
 
-    def loadtridiobject(self):
+    def loadtridiobject(self, objectpath=OBJJSONPATH):
         self.tridiobject = TriDObject()
-        self.tridiobject.loadfromjson(OBJJSONPATH)
+        self.tridiobject.loadfromjson(objectpath)
+
+    def tridiobjecttranslation(self, coordinates):
+        """Translada o objeto carregado em self.tridiobject de acordo com as coordenadas de translacao passadas por
+        parametro. Coordinates deve ser uma tupla do tipo (x, y, z)"""
+        if not self.tridiobject:
+            return False
+
+        dx = coordinates[0]
+        dy = coordinates[1]
+        dz = coordinates[2]
+
+        translationmatrix = [[1, 0, 0, dx],
+                             [0, 1, 0, dy],
+                             [0, 0, 1, dz],
+                             [0, 0, 0, 1]]
+        translationmatrix = numpy.matrix(translationmatrix)
+        results = translationmatrix * self.tridiobject.numpymatrix()
+        newtridiobject = TriDObject()
+        newtridiobject.loadfromnumpymatrix(self.tridiobject, results)
+        self.tridiobject = newtridiobject
+        return True
 
     def perspectivematrix(self, pointofview):
         """Calcula a matriz perspectiva considerando o plano de projecao em Z=0. O ponto de vista PV(a,b,c) eh passado
