@@ -87,7 +87,7 @@ class TriDObject(object):
         xrow = []
         yrow = []
         zrow = []
-        wrow = [1] * len(self.vertices) # Coordenadas homogeneas possuem w
+        wrow = [1] * len(self.vertices) # Coordenadas homogeneas possuem w. Nessa conversao, w=1 para todas coordenadas
         for vertix in sorted(self.vertices, key=lambda vertix: vertix[0]):
             xrow.append(vertix[1])
             yrow.append(vertix[2])
@@ -107,7 +107,10 @@ class PerspectiveProjection(object):
 
     def perspectivematrix(self, pointofview):
         """Calcula a matriz perspectiva considerando o plano de projecao em Z=0. O ponto de vista PV(a,b,c) eh passado
-        como parametro do metodo em forma de uma tupla (a, b, c)"""
+        como parametro do metodo em forma de uma tupla (a, b, c)
+        a = pointofview[0]
+        b = pointofview[1]
+        c = pointofview[2]"""
 
         # Primeiro passo: calcular vetor normal ao plano de projecao. Como o plano de projecao eh Z=0, o vetor eh o
         # versor k, paralelo ao eixo Z
@@ -138,6 +141,8 @@ class PerspectiveProjection(object):
                         [pointofview[2] * nx, pointofview[2] * ny, d + pointofview[2] * nz, - pointofview[2] * d0],
                         [nx, ny, nz, - d1]]
 
+        # Retorna uma matriz do pacote numpy, construida a partir da matriz construida acima. As matrizes do numpy
+        # permitem utilizar facilmente operacoes basicas de matrizes sobre elas, como a multiplicacao
         return numpy.matrix(returnmatrix)
 
     def getprojection(self, pointofview):
