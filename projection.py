@@ -8,11 +8,11 @@ OBJJSONPATH = 'objeto.json'
 
 
 mainframe = Tk()
-mainframe.geometry("865x800+0+150")
+mainframe.geometry("800x600+0+150")
 mainframe.wm_title("3kaD: Sistema de visualização de objetos 3D")
 
 frameCanvas = Frame(mainframe, borderwidth=4, relief=GROOVE)
-frameCanvas.pack(side=LEFT, expand=True, fill=X)
+frameCanvas.pack(side=LEFT, expand=True, fill=BOTH)
 
 scrollcanvasx = Scrollbar(frameCanvas, orient=HORIZONTAL)
 scrollcanvasx.pack(side=BOTTOM, fill=X)
@@ -23,8 +23,8 @@ scrollcanvasx.config(command=canvas.xview)
 scrollcanvasy.config(command=canvas.yview)
 canvas.pack(side=LEFT, expand=True, fill=BOTH)
 
-botaoAbrir = Button(mainframe, width=8, borderwidth=2, text="Abrir")
-botaoAbrir.place(x=40, y=20)
+#botaoAbrir = Button(mainframe, width=8, borderwidth=2, text="Abrir")
+#botaoAbrir.place(x=40, y=20)
 
 
 class TriDObject(object):
@@ -213,28 +213,55 @@ class PerspectiveProjection(object):
         return self.projection
 
 
+Sx = 800/20 # 40
+Sy = 600/15 # 40
+
+
 projection = PerspectiveProjection()
 projecaoEscada = projection.getprojection((8,2,10))
 print(len(projecaoEscada.vertices))
 print(projecaoEscada.vertices)
 
-print(canvas.create_polygon(projecaoEscada.vertices[0][1], projecaoEscada.vertices[0][2], projecaoEscada.vertices[1][1],
-                            projecaoEscada.vertices[1][2], projecaoEscada.vertices[2][1], projecaoEscada.vertices[2][2],
-                            projecaoEscada.vertices[3][1], projecaoEscada.vertices[3][2], projecaoEscada.vertices[11][1],
-                            projecaoEscada.vertices[11][2], projecaoEscada.vertices[8][1], projecaoEscada.vertices[8][2],
-                            projecaoEscada.vertices[7][1], projecaoEscada.vertices[7][2], projecaoEscada.vertices[4][1],
-                            projecaoEscada.vertices[4][2], projecaoEscada.vertices[0][1], projecaoEscada.vertices[0][2],
-                            projecaoEscada.vertices[3][1], projecaoEscada.vertices[3][2], projecaoEscada.vertices[11][1],
-                            projecaoEscada.vertices[11][2], projecaoEscada.vertices[10][1], projecaoEscada.vertices[10][2],
-                            projecaoEscada.vertices[9][1], projecaoEscada.vertices[9][2], projecaoEscada.vertices[6][1],
-                            projecaoEscada.vertices[6][2], projecaoEscada.vertices[5][1], projecaoEscada.vertices[5][2],
-                            projecaoEscada.vertices[1][1], projecaoEscada.vertices[1][2], projecaoEscada.vertices[5][1],
-                            projecaoEscada.vertices[5][2], projecaoEscada.vertices[4][1], projecaoEscada.vertices[4][2],
-                            projecaoEscada.vertices[7][1], projecaoEscada.vertices[7][2], projecaoEscada.vertices[6][1],
-                            projecaoEscada.vertices[6][2], projecaoEscada.vertices[7][1], projecaoEscada.vertices[7][2],
-                            projecaoEscada.vertices[8][1], projecaoEscada.vertices[8][2], projecaoEscada.vertices[9][1],
-                            projecaoEscada.vertices[9][2], projecaoEscada.vertices[10][1], projecaoEscada.vertices[10][2],
-                            projecaoEscada.vertices[2][1], projecaoEscada.vertices[2][2], fill="white"))
+i=0;j=1; k=0; l=0;m=0;n=0; cont=0; valor=0
+Tjv = [[Sx, 0, 600], [0, Sy, 280], [0, 0, 1]]
+matrizResultante = [[],[],[]]
+
+
+def janelaViewport():
+    global projecaoEscada, matrizResultante, Tjv, i,j,k,l,m,n,cont,valor
+    while True:
+        #print("KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK: " + str(k))
+        for i in range(len(projecaoEscada.vertices)-1):
+            if(n==12):
+                #print("ENTREI NO IF ")
+                n=0
+                k+=1
+                m+=1
+                #cont+=1
+            l=0
+            for j in range(3):
+                #print("\nTjv[" + str(k)+"][" + str(l) + "]:" + str(Tjv[k][l]))
+                #print("\nvertices[" + str(k)+"][" + str(l) + "]: " + str(projecaoEscada.vertices[i][j]))
+                valor = Tjv[k][l] * projecaoEscada.vertices[i][j]
+                #print("\nvalor: " + str(valor))
+                l+=1
+                matrizResultante[m].append(valor)
+                #print(matrizResultante)
+                #print(cont)
+                n+=1
+                if(cont==35):
+                    print("RETORNEI PORRA!")
+                    print(matrizResultante)
+                    return
+                cont+=1
+
+janelaViewport()
+
+#print(matrizResultante)
+print(canvas.create_polygon(matrizResultante[0][0], matrizResultante[1][0], matrizResultante[0][1],
+                            matrizResultante[1][1], matrizResultante[0][2], matrizResultante[1][2],
+                            matrizResultante[0][3], matrizResultante[1][3], matrizResultante[0][4], matrizResultante[1][4], outline="green"))
+
 
 
 mainloop()
