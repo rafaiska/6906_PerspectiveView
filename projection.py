@@ -20,6 +20,12 @@ class TriDObject(object):
         self.edges = {}
         self.faces = {}
 
+    def get_vertix(self, name):
+        for vertix in self.vertices:
+            if vertix[0] == name:
+                return vertix
+        return None
+
     def loadfromjson(self, jsonpath):
         """Carrega a figura 3D descrita no arquivo json"""
         with open(jsonpath, 'r') as objfile:
@@ -173,10 +179,13 @@ class PerspectiveProjection(object):
         if not self.tridiobject:
             self.loadtridiobject()
 
+        hiddenfaces = self.detecthiddenfaces(pointofview)
         perspectivematrix = self.perspectivematrix(pointofview)
         results = perspectivematrix * self.tridiobject.numpymatrix()
         self.projection = TriDObject()
         self.projection.loadfromnumpymatrix(self.tridiobject, results)
+        for face in hiddenfaces:
+            self.projection.removeface(face)
 
         # Retorna o TriDObject de projecao, armazenado no atributo da classe
         return self.projection
