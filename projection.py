@@ -5,6 +5,7 @@ __author__ = 'https://github.com/rafaiska'
 
 OBJJSONPATH = 'objeto.json'
 
+
 class TriDObject(object):
     """Essa classe serve para representar uma figura espacial atraves de vertices e arestas, os quais estao em um
     espaco de coordenadas do mundo (WCS). Os vertices e as arestas sao representadas da seguinte forma:
@@ -84,6 +85,34 @@ class TriDObject(object):
     def addface(self, facename, vertices_names):
         """Adiciona uma aresta"""
         self.faces[facename] = vertices_names
+
+    def removeface(self, facename):
+        del self.faces[facename]
+        self.updatevertices()
+
+    def updatevertices(self):
+        def notpartofanyface(vertixname):
+            for face in self.faces.values():
+                if vertixname in face:
+                    return False
+            return True
+
+        # Seleciona para remocao vertices que nao aparecam em mais nenhuma face da figura
+        removevertixlist = []
+        for vertix in self.vertices:
+            if notpartofanyface(vertix[0]):
+                removevertixlist.append(vertix)
+                del self.edges[vertix[0]]
+
+        # Remove arestas que contem vertices a serem removidos
+        for dsts in self.edges.values():
+            for vertix in removevertixlist:
+                if vertix[0] in dsts:
+                    dsts.remove(vertix[0])
+
+        # Remove todos os vertices listados para remocao
+        for vertix in removevertixlist:
+            self.vertices.remove(vertix)
 
     def numpymatrix(self):
         xrow = []
