@@ -18,6 +18,7 @@ class TriDObject(object):
     def __init__(self):
         self.vertices = []
         self.edges = {}
+        self.faces = {}
 
     def loadfromjson(self, jsonpath):
         """Carrega a figura 3D descrita no arquivo json"""
@@ -30,9 +31,10 @@ class TriDObject(object):
 
         for src, dsts in loadedjson['edges'].items():
             for dst in dsts:
-                if not self.addedge(src, dst):
-                    print('ERRO: uma das arestas contem vertice(s) desconhecido(s)')
-                    print('\tAresta: (%s, %s)' % (src, dst))
+                self.addedge(src, dst)
+
+        for facename, verticeslist in loadedjson['faces'].items():
+            self.addface(facename, verticeslist)
 
     def loadfromnumpymatrix(self, parenttridobject, numpymatrix):
         """Carrega o objeto 3D a partir de uma matriz de pontos e um objeto 3D de referencia. Eh necessario passar um
@@ -56,6 +58,7 @@ class TriDObject(object):
             j += 1
 
         self.edges = parenttridobject.edges
+        self.faces = parenttridobject.faces
 
     def addvertix(self, name, x, y, z):
         """Adiciona um vertice"""
@@ -63,25 +66,18 @@ class TriDObject(object):
 
     def addedge(self, vertixa_name, vertixb_name):
         """Adiciona uma aresta"""
-        vertixa = None
-        vertixb = None
-        for vertix in self.vertices:
-            if vertix[0] == vertixa_name:
-                vertixa = vertix
-            elif vertix[0] == vertixb_name:
-                vertixb = vertix
-        if not vertixa or not vertixb:
-            return False
-        else:
-            if vertixa not in self.edges.keys():
-                self.edges[vertixa] = []
-            if vertixb not in self.edges.keys():
-                self.edges[vertixb] = []
-            if vertixb not in self.edges[vertixa]:
-                self.edges[vertixa].append(vertixb)
-            if vertixa not in self.edges[vertixb]:
-                self.edges[vertixb].append(vertixa)
-            return True
+        if vertixa_name not in self.edges.keys():
+            self.edges[vertixa_name] = []
+        if vertixb_name not in self.edges.keys():
+            self.edges[vertixb_name] = []
+        if vertixb_name not in self.edges[vertixa_name]:
+            self.edges[vertixa_name].append(vertixb_name)
+        if vertixa_name not in self.edges[vertixb_name]:
+            self.edges[vertixb_name].append(vertixa_name)
+
+    def addface(self, facename, vertices_names):
+        """Adiciona uma aresta"""
+        self.faces[facename] = vertices_names
 
     def numpymatrix(self):
         xrow = []
