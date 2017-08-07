@@ -1,9 +1,30 @@
 import numpy
 import json
+from tkinter import *
 
 __author__ = 'https://github.com/rafaiska'
 
 OBJJSONPATH = 'objeto.json'
+
+
+mainframe = Tk()
+mainframe.geometry("865x800+0+150")
+mainframe.wm_title("3kaD: Sistema de visualização de objetos 3D")
+
+frameCanvas = Frame(mainframe, borderwidth=4, relief=GROOVE)
+frameCanvas.pack(side=LEFT, expand=True, fill=X)
+
+scrollcanvasx = Scrollbar(frameCanvas, orient=HORIZONTAL)
+scrollcanvasx.pack(side=BOTTOM, fill=X)
+scrollcanvasy = Scrollbar(frameCanvas)
+scrollcanvasy.pack(side=RIGHT, fill=Y)
+canvas = Canvas(frameCanvas, bg="black", scrollregion=(-1000,-1000,2000,2000), xscrollcommand=scrollcanvasx.set, yscrollcommand=scrollcanvasy.set, width=670, height=590)
+scrollcanvasx.config(command=canvas.xview)
+scrollcanvasy.config(command=canvas.yview)
+canvas.pack(side=LEFT, expand=True, fill=BOTH)
+
+botaoAbrir = Button(mainframe, width=8, borderwidth=2, text="Abrir")
+botaoAbrir.place(x=40, y=20)
 
 
 class TriDObject(object):
@@ -52,7 +73,7 @@ class TriDObject(object):
         verticesnames = []
 
         for vertix in parenttridobject.vertices:
-            verticesnames.append(vertix[0])
+            verticesnames.append(int(vertix[0]))
 
         j = 0
         for vertix in sorted(verticesnames):
@@ -208,13 +229,40 @@ class PerspectiveProjection(object):
         if not self.tridiobject:
             self.loadtridiobject()
 
-        hiddenfaces = self.detecthiddenfaces(pointofview)
+        #hiddenfaces = self.detecthiddenfaces(pointofview)
         perspectivematrix = self.perspectivematrix(pointofview)
         results = perspectivematrix * self.tridiobject.numpymatrix()
         self.projection = TriDObject()
         self.projection.loadfromnumpymatrix(self.tridiobject, results)
-        for face in hiddenfaces:
-            self.projection.removeface(face)
+        #for face in hiddenfaces:
+        #    self.projection.removeface(face)
 
         # Retorna o TriDObject de projecao, armazenado no atributo da classe
         return self.projection
+
+
+projection = PerspectiveProjection()
+projecaoEscada = projection.getprojection((8,2,10))
+print(len(projecaoEscada.vertices))
+print(projecaoEscada.vertices)
+
+print(canvas.create_polygon(projecaoEscada.vertices[0][1], projecaoEscada.vertices[0][2], projecaoEscada.vertices[1][1],
+                            projecaoEscada.vertices[1][2], projecaoEscada.vertices[2][1], projecaoEscada.vertices[2][2],
+                            projecaoEscada.vertices[3][1], projecaoEscada.vertices[3][2], projecaoEscada.vertices[11][1],
+                            projecaoEscada.vertices[11][2], projecaoEscada.vertices[8][1], projecaoEscada.vertices[8][2],
+                            projecaoEscada.vertices[7][1], projecaoEscada.vertices[7][2], projecaoEscada.vertices[4][1],
+                            projecaoEscada.vertices[4][2], projecaoEscada.vertices[0][1], projecaoEscada.vertices[0][2],
+                            projecaoEscada.vertices[3][1], projecaoEscada.vertices[3][2], projecaoEscada.vertices[11][1],
+                            projecaoEscada.vertices[11][2], projecaoEscada.vertices[10][1], projecaoEscada.vertices[10][2],
+                            projecaoEscada.vertices[9][1], projecaoEscada.vertices[9][2], projecaoEscada.vertices[6][1],
+                            projecaoEscada.vertices[6][2], projecaoEscada.vertices[5][1], projecaoEscada.vertices[5][2],
+                            projecaoEscada.vertices[1][1], projecaoEscada.vertices[1][2], projecaoEscada.vertices[5][1],
+                            projecaoEscada.vertices[5][2], projecaoEscada.vertices[4][1], projecaoEscada.vertices[4][2],
+                            projecaoEscada.vertices[7][1], projecaoEscada.vertices[7][2], projecaoEscada.vertices[6][1],
+                            projecaoEscada.vertices[6][2], projecaoEscada.vertices[7][1], projecaoEscada.vertices[7][2],
+                            projecaoEscada.vertices[8][1], projecaoEscada.vertices[8][2], projecaoEscada.vertices[9][1],
+                            projecaoEscada.vertices[9][2], projecaoEscada.vertices[10][1], projecaoEscada.vertices[10][2],
+                            projecaoEscada.vertices[2][1], projecaoEscada.vertices[2][2], fill="white"))
+
+
+mainloop()
