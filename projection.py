@@ -23,7 +23,6 @@ class TriDObject(object):
 
     def get_vertix(self, name):
         for vertix in self.vertices:
-            print(type(vertix[0]))
             if vertix[0] == name:
                 return vertix
         return None
@@ -77,6 +76,21 @@ class TriDObject(object):
         newtridiobject = TriDObject()
         newtridiobject.loadfromnumpymatrix(self, results)
         return newtridiobject
+
+    def xzmirror(self):
+        """Translada o objeto carregado em self.tridiobject de acordo com as coordenadas de translacao passadas por
+        parametro. Coordinates deve ser uma tupla do tipo (x, y, z)"""
+
+        mirrormatrix = [[1, 0, 0, 0],
+                        [0, -1, 0, 0],
+                        [0, 0, 1, 0],
+                        [0, 0, 0, 1]]
+        mirrormatrix = numpy.matrix(mirrormatrix)
+        results = mirrormatrix * self.numpymatrix()
+        newtridiobject = TriDObject()
+        newtridiobject.loadfromnumpymatrix(self, results)
+        return newtridiobject
+
 
     def loadfromnumpymatrix(self, parenttridobject, numpymatrix):
         """Carrega o objeto 3D a partir de uma matriz de pontos e um objeto 3D de referencia. Eh necessario passar um
@@ -232,6 +246,29 @@ class PerspectiveProjection(object):
         # permitem utilizar facilmente operacoes basicas de matrizes sobre elas, como a multiplicacao
         return numpy.matrix(returnmatrix)
 
+    def detecthiddenfaces(self, pointofview):
+        hiddenfaces = []
+        for facename, vertices in self.tridiobject.faces.items():
+            v1 = self.tridiobject.get_vertix(vertices[0])
+            v2 = self.tridiobject.get_vertix(vertices[1])
+            v3 = self.tridiobject.get_vertix(vertices[2])
+
+            vector1 = numpy.array([v3[1] - v2[1], v3[2] - v2[2], v3[3] - v2[3]])
+            vector2 = numpy.array([v1[1] - v2[1], v1[2] - v2[2], v1[3] - v2[3]])
+            print(vector1)
+            print(vector2)
+            normalvector = numpy.cross(vector1, vector2)
+            print('normal a face %s' % (facename))
+            print(normalvector)
+
+            povvector = [pointofview[0] - v1[1], pointofview[1] - v1[2], pointofview[2] - v1[3]]
+            scalarproduct = numpy.dot(normalvector, povvector)
+            print(scalarproduct)
+            if scalarproduct < 0:
+                hiddenfaces.append(facename)
+        return hiddenfaces
+
+
     def getprojection(self, pointofview):
         """Esse metodo recebe uma tupla (X, Y, Z) como parametro, o qual representa as coordenadas do ponto de vista
         utilizado na projecao. O metodo retorna um objeto do tipo TriDObject, que esta descrito acima, no docstring de
@@ -243,13 +280,13 @@ class PerspectiveProjection(object):
         if not self.tridiobject:
             self.loadtridiobject()
 
-        #hiddenfaces = self.detecthiddenfaces(pointofview)
+        hiddenfaces = self.detecthiddenfaces(pointofview)
         perspectivematrix = self.perspectivematrix(pointofview)
         results = perspectivematrix * self.tridiobject.numpymatrix()
         self.projection = TriDObject()
         self.projection.loadfromnumpymatrix(self.tridiobject, results)
-        #for face in hiddenfaces:
-        #    self.projection.removeface(face)
+        for face in hiddenfaces:
+            self.projection.removeface(face)
 
         # Retorna o TriDObject de projecao, armazenado no atributo da classe
         return self.projection
