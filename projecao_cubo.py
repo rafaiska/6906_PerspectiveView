@@ -4,7 +4,29 @@ from tkinter import *
 
 __author__ = 'https://github.com/rafaiska'
 
-OBJJSONPATH = 'objeto.json'
+OBJJSONPATH = 'cubo.json'
+
+mainframe = Tk()
+mainframe.geometry("800x600+0+150")
+mainframe.wm_title("3kaD: Sistema de visualização de objetos 3D")
+
+frameCanvas = Frame(mainframe, borderwidth=4, relief=GROOVE, width=670, height=570)
+#frameCanvas.pack(side=LEFT, expand=True, fill=BOTH)
+frameCanvas.place(x=110,y=0)
+
+scrollcanvasx = Scrollbar(frameCanvas, orient=HORIZONTAL)
+scrollcanvasx.pack(side=BOTTOM, fill=X)
+scrollcanvasy = Scrollbar(frameCanvas)
+scrollcanvasy.pack(side=RIGHT, fill=Y)
+canvas = Canvas(frameCanvas, bg="black", scrollregion=(-4000,-4000,8000,8000), xscrollcommand=scrollcanvasx.set, yscrollcommand=scrollcanvasy.set, width=670, height=590)
+scrollcanvasx.config(command=canvas.xview)
+scrollcanvasy.config(command=canvas.yview)
+canvas.pack(side=LEFT, expand=True, fill=BOTH)
+
+framePontovista = Frame(mainframe, borderwidth=3, height=215, width=165, relief=GROOVE)
+framePontovista.place(x=0, y=0)
+#botaoAbrir.place(x=40, y=20)
+
 
 class TriDObject(object):
     """Essa classe serve para representar uma figura espacial atraves de vertices e arestas, os quais estao em um
@@ -43,55 +65,6 @@ class TriDObject(object):
         for facename, verticeslist in loadedjson['faces'].items():
             self.addface(facename, verticeslist)
 
-    def translation(self, coordinates):
-        """Translada o objeto carregado em self.tridiobject de acordo com as coordenadas de translacao passadas por
-        parametro. Coordinates deve ser uma tupla do tipo (x, y, z)"""
-        dx = coordinates[0]
-        dy = coordinates[1]
-        dz = coordinates[2]
-
-        translationmatrix = [[1, 0, 0, dx],
-                             [0, 1, 0, dy],
-                             [0, 0, 1, dz],
-                             [0, 0, 0, 1]]
-        translationmatrix = numpy.matrix(translationmatrix)
-        results = translationmatrix * self.numpymatrix()
-        newtridiobject = TriDObject()
-        newtridiobject.loadfromnumpymatrix(self, results)
-        return newtridiobject
-
-    def scale(self, rates):
-        """Translada o objeto carregado em self.tridiobject de acordo com as coordenadas de translacao passadas por
-        parametro. Coordinates deve ser uma tupla do tipo (x, y, z)"""
-        sx = rates[0]
-        sy = rates[1]
-        sz = rates[2]
-
-        scalematrix = [[sx, 0, 0, 0],
-                             [0, sy, 0, 0],
-                             [0, 0, sz, 0],
-                             [0, 0, 0, 1]]
-        scalematrix = numpy.matrix(scalematrix)
-        results = scalematrix * self.numpymatrix()
-        newtridiobject = TriDObject()
-        newtridiobject.loadfromnumpymatrix(self, results)
-        return newtridiobject
-
-    def xzmirror(self):
-        """Translada o objeto carregado em self.tridiobject de acordo com as coordenadas de translacao passadas por
-        parametro. Coordinates deve ser uma tupla do tipo (x, y, z)"""
-
-        mirrormatrix = [[1, 0, 0, 0],
-                        [0, -1, 0, 0],
-                        [0, 0, 1, 0],
-                        [0, 0, 0, 1]]
-        mirrormatrix = numpy.matrix(mirrormatrix)
-        results = mirrormatrix * self.numpymatrix()
-        newtridiobject = TriDObject()
-        newtridiobject.loadfromnumpymatrix(self, results)
-        return newtridiobject
-
-
     def loadfromnumpymatrix(self, parenttridobject, numpymatrix):
         """Carrega o objeto 3D a partir de uma matriz de pontos e um objeto 3D de referencia. Eh necessario passar um
         objeto de referencia para que se conheca as arestas do objeto, que nao sao representadas nas matrizes de objeto
@@ -101,7 +74,7 @@ class TriDObject(object):
         verticesnames = []
 
         for vertix in parenttridobject.vertices:
-            verticesnames.append(vertix[0])
+            verticesnames.append(int(vertix[0]))
 
         j = 0
         for vertix in sorted(verticesnames):
@@ -134,34 +107,6 @@ class TriDObject(object):
     def addface(self, facename, vertices_names):
         """Adiciona uma aresta"""
         self.faces[facename] = vertices_names
-
-    def removeface(self, facename):
-        del self.faces[facename]
-        self.updatevertices()
-
-    def updatevertices(self):
-        def notpartofanyface(vertixname):
-            for face in self.faces.values():
-                if vertixname in face:
-                    return False
-            return True
-
-        # Seleciona para remocao vertices que nao aparecam em mais nenhuma face da figura
-        removevertixlist = []
-        for vertix in self.vertices:
-            if notpartofanyface(vertix[0]):
-                removevertixlist.append(vertix)
-                del self.edges[vertix[0]]
-
-        # Remove arestas que contem vertices a serem removidos
-        for dsts in self.edges.values():
-            for vertix in removevertixlist:
-                if vertix[0] in dsts:
-                    dsts.remove(vertix[0])
-
-        # Remove todos os vertices listados para remocao
-        for vertix in removevertixlist:
-            self.vertices.remove(vertix)
 
     def numpymatrix(self):
         xrow = []
@@ -246,29 +191,6 @@ class PerspectiveProjection(object):
         # permitem utilizar facilmente operacoes basicas de matrizes sobre elas, como a multiplicacao
         return numpy.matrix(returnmatrix)
 
-    def detecthiddenfaces(self, pointofview):
-        hiddenfaces = []
-        for facename, vertices in self.tridiobject.faces.items():
-            v1 = self.tridiobject.get_vertix(vertices[0])
-            v2 = self.tridiobject.get_vertix(vertices[1])
-            v3 = self.tridiobject.get_vertix(vertices[2])
-
-            vector1 = numpy.array([v3[1] - v2[1], v3[2] - v2[2], v3[3] - v2[3]])
-            vector2 = numpy.array([v1[1] - v2[1], v1[2] - v2[2], v1[3] - v2[3]])
-            #print(vector1)
-            #print(vector2)
-            normalvector = numpy.cross(vector1, vector2)
-            #print('normal a face %s' % (facename))
-            #print(normalvector)
-
-            povvector = [pointofview[0] - v1[1], pointofview[1] - v1[2], pointofview[2] - v1[3]]
-            scalarproduct = numpy.dot(normalvector, povvector)
-            #print(scalarproduct)
-            if scalarproduct < 0:
-                hiddenfaces.append(facename)
-        return hiddenfaces
-
-
     def getprojection(self, pointofview):
         """Esse metodo recebe uma tupla (X, Y, Z) como parametro, o qual representa as coordenadas do ponto de vista
         utilizado na projecao. O metodo retorna um objeto do tipo TriDObject, que esta descrito acima, no docstring de
@@ -280,13 +202,136 @@ class PerspectiveProjection(object):
         if not self.tridiobject:
             self.loadtridiobject()
 
-        hiddenfaces = self.detecthiddenfaces(pointofview)
+        #hiddenfaces = self.detecthiddenfaces(pointofview)
         perspectivematrix = self.perspectivematrix(pointofview)
         results = perspectivematrix * self.tridiobject.numpymatrix()
         self.projection = TriDObject()
         self.projection.loadfromnumpymatrix(self.tridiobject, results)
-        for face in hiddenfaces:
-            self.projection.removeface(face)
+        #for face in hiddenfaces:
+        #    self.projection.removeface(face)
 
         # Retorna o TriDObject de projecao, armazenado no atributo da classe
         return self.projection
+
+
+Sx = 100/20 # 40
+Sy = 75/15 # 40
+
+
+projection = PerspectiveProjection()
+projecaoCubo = projection.getprojection((8,2,10))
+print(len(projecaoCubo.vertices))
+print(projecaoCubo.vertices)
+
+i=0;j=1; k=0; l=0;m=0;n=0; cont=0; valor=0
+Tjv = [[Sx, 0, 600], [0, Sy, 280], [0, 0, 1]]  # Matriz da Janela Viewport (Tjv)
+matrizResultante = [[],[],[]]   # Matriz resultante da Tjv * projeçãoEscada.vertices
+
+
+def janelaViewport(): # Realiza a Janela Viewport da projeção
+    global projecaoCubo, matrizResultante, Tjv, i,j,k,l,m,n,cont,valor
+    while True:
+        #print("KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK: " + str(k))
+        for i in range(len(projecaoCubo.vertices)-1):
+            l=0
+            for j in range(3):
+                if(n == 8):
+                    print("ENTREI NO IF ")
+                    n=0
+                    k+=1
+                    m+=1
+                    #cont+=1
+                #print("\nTjv[" + str(k)+"][" + str(l) + "]:" + str(Tjv[k][l]))
+                #print("\nvertices[" + str(k)+"][" + str(l) + "]: " + str(projecaoCubo.vertices[i][j]))
+                valor = Tjv[k][l] * projecaoCubo.vertices[i][j]
+                #print("\nvalor: " + str(valor))
+                l+=1
+                matrizResultante[m].append(valor)
+                print(matrizResultante)
+                #print(cont)
+                print(n)
+                n+=1
+                if(cont==23):
+                    print("RETORNEI PORRA!")
+                    #print(matrizResultante)
+                    return
+                cont+=1
+
+janelaViewport()
+print(matrizResultante)
+
+"""# ARESTAS DO V1
+canvas.create_polygon(projecaoCubo.vertices[0][1], projecaoCubo.vertices[0][2], projecaoCubo.vertices[1][1],
+projecaoCubo.vertices[1][2], outline = "green")
+canvas.create_polygon(projecaoCubo.vertices[0][1], projecaoCubo.vertices[0][2], projecaoCubo.vertices[3][1],
+projecaoCubo.vertices[3][2], outline = "green")
+canvas.create_polygon(projecaoCubo.vertices[0][1], projecaoCubo.vertices[0][2], projecaoCubo.vertices[4][1],
+projecaoCubo.vertices[4][2], outline = "green")
+
+# V2
+canvas.create_polygon(projecaoCubo.vertices[1][1], projecaoCubo.vertices[1][2], projecaoCubo.vertices[2][1],
+projecaoCubo.vertices[2][2], outline = "green")
+canvas.create_polygon(projecaoCubo.vertices[1][1], projecaoCubo.vertices[1][2], projecaoCubo.vertices[5][1],
+projecaoCubo.vertices[5][2], outline = "green")
+
+# V3
+canvas.create_polygon(projecaoCubo.vertices[2][1], projecaoCubo.vertices[2][2], projecaoCubo.vertices[3][1],
+projecaoCubo.vertices[3][2], outline = "green")
+canvas.create_polygon(projecaoCubo.vertices[2][1], projecaoCubo.vertices[2][2], projecaoCubo.vertices[6][1],
+projecaoCubo.vertices[6][2], outline = "green")
+
+# V4
+
+canvas.create_polygon(projecaoCubo.vertices[3][1], projecaoCubo.vertices[3][2], projecaoCubo.vertices[7][1],
+projecaoCubo.vertices[7][2], outline = "green")
+
+# V5
+canvas.create_polygon(projecaoCubo.vertices[4][1], projecaoCubo.vertices[4][2], projecaoCubo.vertices[5][1],
+projecaoCubo.vertices[5][2], outline = "green")
+canvas.create_polygon(projecaoCubo.vertices[4][1], projecaoCubo.vertices[4][2], projecaoCubo.vertices[7][1],
+projecaoCubo.vertices[7][2], outline = "green")
+
+# V6
+canvas.create_polygon(projecaoCubo.vertices[5][1], projecaoCubo.vertices[5][2], projecaoCubo.vertices[6][1],
+projecaoCubo.vertices[6][2], outline = "green")
+
+#V7
+canvas.create_polygon(projecaoCubo.vertices[6][1], projecaoCubo.vertices[6][2], projecaoCubo.vertices[7][1],
+projecaoCubo.vertices[7][2], outline = "green")"""
+
+"""#V1
+canvas.create_polygon(matrizResultante[0][0], matrizResultante[1][0], matrizResultante[0][1],
+                            matrizResultante[1][1], outline="green")
+canvas.create_polygon(matrizResultante[0][0], matrizResultante[1][0], matrizResultante[0][3],
+                            matrizResultante[1][3], outline="green")
+canvas.create_polygon(matrizResultante[0][0], matrizResultante[1][0], matrizResultante[0][4],
+                            matrizResultante[1][4], outline="green")
+
+#V2
+canvas.create_polygon(matrizResultante[0][1], matrizResultante[1][1], matrizResultante[0][2],
+                            matrizResultante[1][2], outline="green")
+canvas.create_polygon(matrizResultante[0][1], matrizResultante[1][1], matrizResultante[0][5],
+                            matrizResultante[1][5], outline="green")
+
+#V3
+canvas.create_polygon(matrizResultante[0][2], matrizResultante[1][2], matrizResultante[0][3],
+                            matrizResultante[1][3], outline="green")
+canvas.create_polygon(matrizResultante[0][2], matrizResultante[1][2], matrizResultante[0][6],
+                            matrizResultante[1][6], outline="green")
+#V4
+canvas.create_polygon(matrizResultante[0][3], matrizResultante[1][3], matrizResultante[0][7],
+                            matrizResultante[1][7], outline="green")
+#V5
+canvas.create_polygon(matrizResultante[0][4], matrizResultante[1][4], matrizResultante[0][5],
+                            matrizResultante[1][5], outline="green")
+canvas.create_polygon(matrizResultante[0][4], matrizResultante[1][4], matrizResultante[0][7],
+                            matrizResultante[1][7], outline="green")
+
+#V6
+canvas.create_polygon(matrizResultante[0][5], matrizResultante[1][5], matrizResultante[0][6],
+                            matrizResultante[1][6], outline="green")
+#V7
+canvas.create_polygon(matrizResultante[0][6], matrizResultante[1][6], matrizResultante[0][7],
+                            matrizResultante[1][7], outline="green")"""
+
+mainloop()

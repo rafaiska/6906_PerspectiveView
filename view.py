@@ -50,7 +50,7 @@ class InputFrame(tkinter.Frame):
         self.labelentryx.grid(row=0, column=0)
         self.labelentryy.grid(row=0, column=2)
         self.labelentryz.grid(row=0, column=4)
-        self.projectbutton.grid(row=1, column=0)
+        self.projectbutton.grid(row=0, column=6)
         self.projectbutton.bind('<Button-1>', self.projectobject)
 
     def projectobject(self, event):
@@ -75,8 +75,8 @@ class MainView(tkinter.Tk):
     def __init__(self):
         tkinter.Tk.__init__(self)
         self.title('Projecao3D')
-        self.canvas = tkinter.Canvas(master=self, width=MSCREEN_WIDTH, height=MSCREEN_HEIGHT)
-        self.canvas.pack()
+        self.canvas = tkinter.Canvas(master=self, width=MSCREEN_WIDTH, height=MSCREEN_HEIGHT, bg="black")
+        self.canvas.pack(expand=True, fill="x")
         self.inputframe = InputFrame(self)
         self.inputframe.pack()
 
@@ -85,7 +85,7 @@ class MainView(tkinter.Tk):
         srcy = int(edge[0][2])
         dstx = int(edge[1][1])
         dsty = int(edge[1][2])
-        self.canvas.create_line(srcx, srcy, dstx, dsty)
+        self.canvas.create_line(srcx, srcy, dstx, dsty, fill="green")
 
     def drawprojection(self, projected):
         # achar x e y minimos
@@ -118,10 +118,10 @@ class MainView(tkinter.Tk):
         # centralizar
         maxx, maxy = get_maxxy(scaleprojected)
         if maxx < MSCREEN_WIDTH -1:
-            print('maxx = %f' % (maxx))
+            #print('maxx = %f' % (maxx))
             scaleprojected = scaleprojected.translation(((MSCREEN_WIDTH - maxx) / 2.0, 0, 0))
         if maxy < MSCREEN_HEIGHT -1:
-            print('maxy = %f' % (maxy))
+            #print('maxy = %f' % (maxy))
             scaleprojected = scaleprojected.translation((0, (MSCREEN_HEIGHT - maxy) / 2.0, 0))
 
         # desenhar arestas
